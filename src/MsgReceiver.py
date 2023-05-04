@@ -2,21 +2,31 @@ import sqlite3
 from dotenv import dotenv_values
 import subprocess
 import os
+from karellen.sqlite3 import Connection
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 env = dotenv_values(f'{dir_path}/../.env')
 
-class msg_receiver():
+class MsgReceiver():
+    
+
     def __init__(self):
-        # holds the 10 most recent messages from newest to oldest
+        # Open chat.db file
+        self.con = Connection(env['CHAT_DB'])
+        self.cur = self.con.cursor()
+        
+        # Queue that holds the 10 most recent messages from newest to oldest
         self.recent_messages = []
+        self.read()
+        print(self.recent_messages)
+        self.new_messages = []
+
+        self.watching = False
 
     # read the chat.db file and return new messages in format [sender_number1: message1, ...]
     def read(self):
         # query for messages
-        con = sqlite3.connect(env['CHAT_DB'])
-        cur = con.cursor()
-        res = cur.execute(f"""
+        res = self.cur.execute(f"""
                             SELECT m.rowid, m.attributedBody,
                             CASE WHEN m.is_from_me THEN {env['MY_NUMBER']} ELSE h.id END
                             FROM message AS m
@@ -47,16 +57,27 @@ class msg_receiver():
                         # clean up typedstream output
                         msg_text = output.split('(')[1].split(')\n')[0]
                         msg = f"{sender}: {msg_text}"
-                        # check if message is new
                         if msg not in self.recent_messages:
-                            messages.append(msg)
-                            self.recent_messages.insert(0, msg)
-                            if len(self.recent_messages) > 10:
-                                 self.recent_messages.pop(10)
-        for message in self.recent_messages:
-            print(message)
-        print('----')
-        return messages
+                             messages.insert(0, msg)
+        self.new_messages = messages
+        self.recent_messages = (self.new_messages + self.recent_messages)[:10]
+        self.watching = False
+    
+    def get_new_messages(self):
+        ret = self.new_messages
+        self.new_messages = []
+        print('------\n')
+        for msg in self.recent_messages:
+             print(msg)
+        return ret
+    
+    def has_new_messages(self):
+         return len(self.new_messages) != 0
+
+    # wait for changes then read them (it doesn't actually wait for anything couldn't figure this out)
+    def watch_db(self):
+         self.watching = True
+         self.con.set_update_hook(self.read())
                     
 
               
