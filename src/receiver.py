@@ -3,12 +3,14 @@ from dotenv import dotenv_values
 import subprocess
 import os
 
-env = dotenv_values('../.env')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+env = dotenv_values(f'{dir_path}/../.env')
 
 class msg_receiver():
     def __init__(self):
         self.recent_messages = []
 
+    # read the chat.db file and return new messages in format [sender_number1: message1, ...]
     def read(self):
         # query for messages
         con = sqlite3.connect(env['CHAT_DB'])
@@ -27,7 +29,7 @@ class msg_receiver():
         # 'attributedBody' column has message content, but it's encoded so we have to clean it up
         for (ROWID, attributedBody, sender) in res.fetchall():
               if attributedBody:
-                    filename = f'../bin/{ROWID}.bin'
+                    filename = f'{dir_path}/../bin/{ROWID}.bin'
                     with open(filename, 'wb') as binfile:
                           binfile.write(attributedBody)
                     cmd = ['python3', '-m', 'typedstream', 'decode', filename]
@@ -39,10 +41,10 @@ class msg_receiver():
                         print(f'Error with message {ROWID}: {err}')
                     else:
                         output = result.stdout.decode()
-                        # clean up output -- there's probably a way to break this if someone sends a 
-                        # really specific message, but at worst the message would just be truncated
+                        # clean up typedstream output
                         msg_text = output.split('(')[1].split(')\n')[0]
                         msg = f"{sender}: {msg_text}"
+                        # check if message is new
                         if msg not in self.recent_messages:
                             messages.append(msg)
                             self.recent_messages.append(msg)
