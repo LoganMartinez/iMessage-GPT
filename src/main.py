@@ -1,5 +1,5 @@
 from receiver import msg_receiver
-from clean_bin import clean_bin
+from utils.clean_bin import clean_bin
 
 clean_bin()
 
