@@ -8,27 +8,39 @@ env = dotenv_values(f'{dir_path}/../.env')
 
 class GPT_model():
     def __init__(self):
+        with open (f"{dir_path}/../chat/models.json", "r") as modelfile:
+            self.models = json.load(modelfile)
         with open (f"{dir_path}/../chat/chat.json", "r") as chatfile:
             self.chatHistory = json.load(chatfile)
-        if 'messages' not in self.chatHistory.keys() or len(self.chatHistory['messages']) == 0:
+        if self.models.keys() != self.chatHistory.keys():
             self.clear_history()
     
     def clear_history(self):
-        self.chatHistory['messages'] = [{ "role": "system", "content": env['SYSTEM_PROMPT'] }]
+        self.chatHistory = {}
+        for model in self.models.keys():
+            self.chatHistory[model] = [{ "role": "system", "content": self.models[model]['system']}]
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)
 
     # receives any message, but will only use ones that contain @<ainame>
     def interpret_messages(self, messages):
         lowercaseMsgs = map(lambda msg: msg.lower(), messages)
-        gptMessages = list(filter(lambda msg: "@" + env['AI_NAME'] in msg, lowercaseMsgs))
+        gptMessages = []
+        for msg in lowercaseMsgs:
+            for modelName in self.models.keys():
+                if modelName.lower() in msg:
+                    gptMessages.append({ 'model': modelName,
+                                         'message': msg 
+                                       })
 
         responses = []
-        for message in gptMessages:
-            print(f'interpretting message: {message}')
-            self.chatHistory['messages'].append({'role': 'user', 'content': message})
+        for msg in gptMessages:
+            print(f'interpretting message: {msg["message"]}...')
+            if '--c' in msg:
+                self.clear_history()
+            self.chatHistory[msg['model']].append({'role': 'user', 'content': msg['message']})
             req_body = { 'model': "gpt-3.5-turbo",
-                         'messages': self.chatHistory['messages'],
+                         'messages': self.chatHistory[msg['model']],
                          "temperature": 0.7
                         }
             r = requests.post('https://api.openai.com/v1/chat/completions',
@@ -40,9 +52,10 @@ class GPT_model():
                 print('error with sending request: ' + str(full_response['error']))
                 return []
             response = full_response['choices'][0]['message']
-            self.chatHistory['messages'].append(response)
+            self.chatHistory[msg['model']].append(response)
             responses.append(response['content'])
 
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)
         return responses
+    
