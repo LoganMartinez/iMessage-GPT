@@ -1,8 +1,7 @@
 .env
 bin/
 .todo.md
-chat/chat.json
-chat/contacts.json
+chat/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
