@@ -12,7 +12,8 @@ chatdb_path = env['CHAT_DB']
 
 receiver = MsgReceiver()
 gpt = GPT_model()
-gpt.clear_history()
+if env['CLEAR_ON_RESTART']:
+    gpt.clear_history()
 
 print('Listening for messages...')
 while True:

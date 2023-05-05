@@ -56,7 +56,7 @@ class MsgReceiver():
 
                     err = result.stderr.decode()
                     if err:
-                        print(f'Error with message {ROWID}: {err}')
+                        print(f'Error with running typedstream on message {ROWID}: {err}')
                     else:
                         output = result.stdout.decode()
                         # clean up typedstream output
@@ -77,7 +77,7 @@ class MsgReceiver():
     def has_new_messages(self):
          return len(self.new_messages) != 0
 
-    # wait for changes then read them (it doesn't actually wait for anything couldn't figure this out)
+    # wait for changes then read them
     def watch_db(self):
          self.watching = True
          self.con.set_update_hook(self.read())
