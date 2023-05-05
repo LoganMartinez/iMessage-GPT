@@ -1,4 +1,4 @@
-# IMessage-GPT
+# iMessage-GPT
 
 ## Overview:
 This project allows you to add ChatGPT functionality into an iMessage groupchat. The chat is monitored for messages that tag the model, and these messages are interpreted by ChatGPT using OpenAI API. The responses are then automatically sent in the groupchat. This project supports the use of multiple customizable independent models that have different system commands and independent chat histories.
