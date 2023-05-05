@@ -15,6 +15,6 @@ This project allows you to add ChatGPT functionality into an iMessage groupchat.
 * karellen-sqlite
 
 ## Usage:
-* run src/main.py
-* send a message in the groupchat with the name specified in /chat/models (@ChatGPT by default)
-* chat history can be cleared by including '--c' in a message
+* From the root directory, run using python3 src/main.py
+* Send a message in the groupchat with the name specified in /chat/models (@ChatGPT by default)
+* Chat history can be cleared by including '--c' in a message
