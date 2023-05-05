@@ -3,6 +3,7 @@ from dotenv import dotenv_values
 import subprocess
 import os
 from karellen.sqlite3 import Connection
+import json
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 env = dotenv_values(f'{dir_path}/../.env')
@@ -15,6 +16,9 @@ class MsgReceiver():
         self.con = Connection(env['CHAT_DB'])
         self.cur = self.con.cursor()
         
+        with open (f"{dir_path}/../chat/contacts.json", "r") as contactsfile:
+            self.contacts = json.load(contactsfile)
+
         # Queue that holds the 10 most recent messages from newest to oldest
         self.recent_messages = []
         self.read()
@@ -22,13 +26,15 @@ class MsgReceiver():
         self.new_messages = []
 
         self.watching = False
+        
+        
 
     # read the chat.db file and return new messages in format [sender_number1: message1, ...]
     def read(self):
         # query for messages
         res = self.cur.execute(f"""
                             SELECT m.rowid, m.attributedBody,
-                            CASE WHEN m.is_from_me THEN {env['MY_NUMBER']} ELSE h.id END
+                            CASE WHEN m.is_from_me THEN '{env['MY_NUMBER']}' ELSE h.id END
                             FROM message AS m
                             LEFT JOIN handle AS h ON m.handle_id = h.rowid
                             WHERE cache_roomnames='{env['CHAT_ID']}'
@@ -56,7 +62,8 @@ class MsgReceiver():
                         output = result.stdout.decode()
                         # clean up typedstream output
                         msg_text = output.split('(')[1].split(')\n')[0]
-                        msg = f"{sender}: {msg_text}"
+                        contact = self.contacts[sender] if sender in self.contacts.keys() else sender
+                        msg = f"{contact}: {msg_text}"
                         if msg not in self.recent_messages:
                              messages.insert(0, msg)
         self.new_messages = messages
@@ -66,9 +73,6 @@ class MsgReceiver():
     def get_new_messages(self):
         ret = self.new_messages
         self.new_messages = []
-        print('------\n')
-        for msg in self.recent_messages:
-             print(msg)
         return ret
     
     def has_new_messages(self):

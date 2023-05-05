@@ -3,12 +3,14 @@ from utils.clean_bin import clean_bin
 from dotenv import dotenv_values
 import os
 import time
+from GPT_model import GPT_model
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 env = dotenv_values(f'{dir_path}/../.env')
 chatdb_path = env['CHAT_DB']
 
 receiver = MsgReceiver()
+gpt = GPT_model()
 
 print('Listening for messages...')
 while True:
