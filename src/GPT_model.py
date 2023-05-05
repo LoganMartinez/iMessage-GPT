@@ -21,20 +21,25 @@ class GPT_model():
     # receives any message, but will only use ones that contain @<ainame>
     def interpret_messages(self, messages):
         lowercaseMsgs = map(lambda msg: msg.lower(), messages)
-        gptMessages = list(filter(lambda msg: env['AI_NAME'] in msg, lowercaseMsgs))
+        gptMessages = list(filter(lambda msg: "@" + env['AI_NAME'] in msg, lowercaseMsgs))
 
         responses = []
         for message in gptMessages:
+            print(f'interpretting message: {message}')
             self.chatHistory['messages'].append({'role': 'user', 'content': message})
             req_body = { 'model': "gpt-3.5-turbo",
-                         'messages': [{"role": "user", "content": "Say this is a test!"}],
+                         'messages': self.chatHistory['messages'],
                          "temperature": 0.7
                         }
             r = requests.post('https://api.openai.com/v1/chat/completions',
                              headers={ "Authorization": f"Bearer {env['API_KEY']}", },
                              json=req_body
                              )
-            response = r.text['choices'][0]['message']
+            full_response = json.loads(r.text)
+            if 'error' in full_response.keys():
+                print('error with sending request: ' + str(full_response['error']))
+                return []
+            response = full_response['choices'][0]['message']
             self.chatHistory['messages'].append(response)
             responses.append(response['content'])
 

@@ -22,7 +22,6 @@ class MsgReceiver():
         # Queue that holds the 10 most recent messages from newest to oldest
         self.recent_messages = []
         self.read()
-        print(self.recent_messages)
         self.new_messages = []
 
         self.watching = False
