@@ -43,10 +43,13 @@ class GPT_model():
                          'messages': self.chatHistory[msg['model']],
                          "temperature": 0.7
                         }
-            r = requests.post('https://api.openai.com/v1/chat/completions',
-                             headers={ "Authorization": f"Bearer {env['API_KEY']}", },
-                             json=req_body
-                             )
+            try:
+                r = requests.post('https://api.openai.com/v1/chat/completions',
+                                headers={ "Authorization": f"Bearer {env['API_KEY']}", },
+                                json=req_body
+                                )
+            except Exception as e:
+                print(f'Error sending request to OpenAI api: {e}')
             full_response = json.loads(r.text)
             if 'error' in full_response.keys():
                 print('error with sending request: ' + str(full_response['error']))
