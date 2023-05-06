@@ -20,9 +20,7 @@ while True:
     try:
         while not receiver.has_new_messages():
             time.sleep(int(env['READ_RATE']))
-            receiver.watch_db()
-            while receiver.watching:
-                time.sleep(int(env['READ_RATE'])) 
+            receiver.read()
         gptResponses = gpt.interpret_messages(receiver.get_new_messages())
         for res in gptResponses:
             # this will cause a problem if there's a quotation in the response

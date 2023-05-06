@@ -2,7 +2,7 @@ import sqlite3
 from dotenv import dotenv_values
 import subprocess
 import os
-from karellen.sqlite3 import Connection
+import sqlite3
 import json
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -10,10 +10,9 @@ env = dotenv_values(f'{dir_path}/../.env')
 
 class MsgReceiver():
     
-
     def __init__(self):
         # Open chat.db file
-        self.con = Connection(env['CHAT_DB'])
+        self.con = sqlite3.connect(env['CHAT_DB'])
         self.cur = self.con.cursor()
         
         with open (f"{dir_path}/../chat/contacts.json", "r") as contactsfile:
@@ -23,9 +22,6 @@ class MsgReceiver():
         self.recent_messages = []
         self.read()
         self.new_messages = []
-
-        self.watching = False
-        
         
 
     # read the chat.db file and return new messages in format [sender_number1: message1, ...]
@@ -67,7 +63,6 @@ class MsgReceiver():
                              messages.insert(0, msg)
         self.new_messages = messages
         self.recent_messages = (self.new_messages + self.recent_messages)[:10]
-        self.watching = False
     
     def get_new_messages(self):
         ret = self.new_messages
@@ -77,10 +72,6 @@ class MsgReceiver():
     def has_new_messages(self):
          return len(self.new_messages) != 0
 
-    # wait for changes then read them
-    def watch_db(self):
-         self.watching = True
-         self.con.set_update_hook(self.read())
                     
 
               
