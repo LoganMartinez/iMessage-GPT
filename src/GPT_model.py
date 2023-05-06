@@ -50,6 +50,7 @@ class GPT_model():
                                 )
             except Exception as e:
                 print(f'Error sending request to OpenAI api: {e}')
+                return []
             full_response = json.loads(r.text)
             if 'error' in full_response.keys():
                 print('error with sending request: ' + str(full_response['error']))
