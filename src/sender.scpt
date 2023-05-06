@@ -8,7 +8,7 @@ on run argv
     set mymessage to item 2 of argv
     set targetService to id of 1st account whose service type = iMessage
     set theChat to chat id ("iMessage;+;" & chatId) of account id targetService
-    -- log mymessage
-    send mymessage to theChat
+    log mymessage
+    -- send mymessage to theChat
   end tell
 end run

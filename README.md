@@ -12,7 +12,7 @@ This project allows you to add ChatGPT functionality into an iMessage groupchat.
 ## Dependencies: 
 * python-dotenv
 * python-typedstream: https://github.com/dgelessus/python-typedstream
-* karellen-sqlite
+* fswatch
 
 ## Usage:
 * run src/main.py

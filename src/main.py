@@ -25,7 +25,7 @@ while True:
                 time.sleep(int(env['READ_RATE'])) 
         gptResponses = gpt.interpret_messages(receiver.get_new_messages())
         for res in gptResponses:
-            # this will cause a problem if there's a quotation in the response
+            # There will be a problem if there's a quotation in the response
             formattedRes = res.replace('"','')
             print(f'sending response: {res}\n----------')
             cmd = ['osascript', f'{dir_path}/sender.scpt', dir_path, formattedRes]
