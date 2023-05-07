@@ -12,18 +12,28 @@ class GPT_model():
             self.models = json.load(modelfile)
         with open (f"{dir_path}/../chat/chat.json", "r") as chatfile:
             self.chatHistory = json.load(chatfile)
-        if self.models.keys() != self.chatHistory.keys():
+        with open(f"{dir_path}/../chat/chatIds.json", "r") as idfile:
+            self.chatIds = json.load(idfile)['chatIds']
+        
+        if self.chatHistory.keys() != self.chatIds:
             self.clear_history()
+        for chatId in self.chatIds:
+            if self.models.keys() != self.chatHistory[chatId].keys():
+                self.clear_history()
     
     def clear_history(self):
         self.chatHistory = {}
-        for model in self.models.keys():
-            self.chatHistory[model] = [{ "role": "system", "content": self.models[model]['system']}]
+        for chatId in self.chatIds:
+            self.chatHistory[chatId] = {}
+            for model in self.models.keys():
+                self.chatHistory[chatId][model] = [{ "role": "system", 
+                                                      "content": self.models[model]['system']}]
+            
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)
 
     # receives any message, but will only use ones that contain @<ainame>
-    def interpret_messages(self, messages):
+    def interpret_messages(self, chatId, messages):
         lowercaseMsgs = map(lambda msg: msg.lower(), messages)
         gptMessages = []
         for msg in lowercaseMsgs:
@@ -38,9 +48,9 @@ class GPT_model():
             print(f'interpretting message: {msg["message"]}...')
             if '--c' in msg:
                 self.clear_history()
-            self.chatHistory[msg['model']].append({'role': 'user', 'content': msg['message']})
+            self.chatHistory[chatId][msg['model']].append({'role': 'user', 'content': msg['message']})
             req_body = { 'model': "gpt-3.5-turbo",
-                         'messages': self.chatHistory[msg['model']],
+                         'messages': self.chatHistory[chatId][msg['model']],
                          "temperature": 0.7
                         }
             try:
@@ -56,10 +66,13 @@ class GPT_model():
                 print('error with sending request: ' + str(full_response['error']))
                 return []
             response = full_response['choices'][0]['message']
-            self.chatHistory[msg['model']].append(response)
+            self.chatHistory[chatId][msg['model']].append(response)
             responses.append(response['content'])
 
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)
         return responses
+
+if __name__ == '__main__':
+    gpt = GPT_model()
     

@@ -24,7 +24,7 @@ while True:
         new_messages = receiver.get_new_messages()
         for chatId in new_messages.keys():
             isGroupChat = '1' if 'chat' in chatId else '0'
-            gptResponses = gpt.interpret_messages(new_messages[chatId])
+            gptResponses = gpt.interpret_messages(chatId, new_messages[chatId])
             for res in gptResponses:
                 # this will cause a problem if there's a quotation in the response
                 formattedRes = res.replace('"','')
