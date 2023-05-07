@@ -23,13 +23,16 @@ class GPT_model():
             json.dump(self.chatHistory, chatfile)
 
     # receives any message, but will only use ones that contain @<ainame>
+    # receives messages as a list of (id, message), and returns list of (id, response)
     def interpret_messages(self, messages):
-        lowercaseMsgs = map(lambda msg: msg.lower(), messages)
+        lowercaseMsgs = map(lambda msg: (msg[0], msg[1].lower()), messages)
         gptMessages = []
-        for msg in lowercaseMsgs:
+        for (id, msg) in lowercaseMsgs:
             for modelName in self.models.keys():
                 if modelName.lower() in msg:
-                    gptMessages.append({ 'model': modelName,
+                    gptMessages.append({ 
+                                         'id': id,
+                                         'model': modelName,
                                          'message': msg 
                                        })
 
@@ -57,7 +60,7 @@ class GPT_model():
                 return []
             response = full_response['choices'][0]['message']
             self.chatHistory[msg['model']].append(response)
-            responses.append(response['content'])
+            responses.append((msg['id'], response['content']))
 
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)

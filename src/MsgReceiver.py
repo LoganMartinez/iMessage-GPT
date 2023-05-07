@@ -58,7 +58,7 @@ class MsgReceiver():
                         # clean up typedstream output
                         msg_text = output.split('(')[1].split(')\n')[0]
                         contact = self.contacts[sender] if sender in self.contacts.keys() else sender
-                        msg = f"{contact}: {msg_text}"
+                        msg = (ROWID, f"{contact}: {msg_text}")
                         if msg not in self.recent_messages:
                              messages.insert(0, msg)
         self.new_messages = messages
