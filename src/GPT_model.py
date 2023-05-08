@@ -61,11 +61,16 @@ class GPT_model():
                 return []
             full_response = json.loads(r.text)
             if 'error' in full_response.keys():
-                print('error with sending request: ' + str(full_response['error']))
-                return []
-            response = full_response['choices'][0]['message']
-            self.chatHistory[chatId][modelName].append(response)
-            responses.append(response['content'])
+                error = full_response['error']
+                if 'overloaded' in error['message']:
+                    responses.append('GPT model is overloaded with requests, try again later.')
+                else:
+                    print('error with sending request: ' + str(full_response['error']))
+                    return []
+            else:
+                response = full_response['choices'][0]['message']
+                self.chatHistory[chatId][modelName].append(response)
+                responses.append(response['content'])
 
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)
