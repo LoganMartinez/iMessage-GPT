@@ -39,18 +39,16 @@ class GPT_model():
         for msg in lowercaseMsgs:
             for modelName in self.models.keys():
                 if modelName.lower() in msg:
-                    gptMessages.append({ 'model': modelName,
-                                         'message': msg 
-                                       })
+                    gptMessages.append((modelName, msg))
 
         responses = []
-        for msg in gptMessages:
-            print(f'interpretting message: {msg["message"]}...')
-            if '--c' in msg:
+        for (modelName, message) in gptMessages:
+            print(f'interpretting message: {message}...')
+            if '--c' in message:
                 self.clear_history()
-            self.chatHistory[chatId][msg['model']].append({'role': 'user', 'content': msg['message']})
+            self.chatHistory[chatId][modelName].append({'role': 'user', 'content': message})
             req_body = { 'model': "gpt-3.5-turbo",
-                         'messages': self.chatHistory[chatId][msg['model']],
+                         'messages': self.chatHistory[chatId][modelName],
                          "temperature": 0.7
                         }
             try:
@@ -66,7 +64,7 @@ class GPT_model():
                 print('error with sending request: ' + str(full_response['error']))
                 return []
             response = full_response['choices'][0]['message']
-            self.chatHistory[chatId][msg['model']].append(response)
+            self.chatHistory[chatId][modelName].append(response)
             responses.append(response['content'])
 
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
