@@ -17,7 +17,7 @@ This project allows you to add multiple customizable AI chatbots into iMessage c
 
 ## Setup:
 * Make sure you are running this from a Mac that has access to your iMessage
-* Make sure whatever you're running the script on (VS code, terminal, etc) has full-disk access
+* Make sure whatever you're running the script on (VS code, terminal, etc) has full-disk access so it can access your chat.db file
 * Install dependencies
 * Create .env file using .env.template
 * Edit the chat/config.json file to personalize your chatbots. (example below)
