@@ -33,7 +33,7 @@ class MsgReceiver():
         for chatId in self.chatIds:
             res = self.cur.execute(f"""
                 SELECT m.rowid, m.attributedBody,
-                        CASE WHEN m.is_from_me THEN '{env['MY_NUMBER']}' ELSE h.id END as fromNumber,
+                        CASE WHEN m.is_from_me THEN 'ME' ELSE h.id END as fromNumber,
                         COALESCE(cache_roomnames, h.id) as chatId
                 FROM message AS m
                         LEFT JOIN handle AS h ON m.handle_id=h.rowid
