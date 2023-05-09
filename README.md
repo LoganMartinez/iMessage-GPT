@@ -53,4 +53,5 @@ This project allows you to add multiple customizable AI chatbots into iMessage c
 ## Future Work
 * Some less technical way to create a config file
 * Use iMessage reply feature so it's clear which message a bot is responding to (if Apple ever supports automating relpies)
+* Add error message for improper setup (config file setup wrong, no access to chat.db file, etc)
 
