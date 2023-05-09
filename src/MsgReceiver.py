@@ -14,12 +14,11 @@ class MsgReceiver():
         # Open chat.db file
         self.con = sqlite3.connect(env['CHAT_DB'])
         self.cur = self.con.cursor()
-        
-        with open (f"{dir_path}/../chat/contacts.json", "r") as contactsfile:
-            self.contacts = json.load(contactsfile)
 
-        with open (f"{dir_path}/../chat/chatIds.json", "r") as idsfile:
-            self.chatIds = json.load(idsfile)['chatIds']
+        with open(f"{dir_path}/../chat/config.json", "r") as configfile:
+            config = json.load(configfile)
+            self.contacts = config['contacts']
+            self.chatIds = config['chatIds']
 
         # dict that holds queues that hold the 10 most recent messages from newest to oldest
         self.recent_messages = {}
