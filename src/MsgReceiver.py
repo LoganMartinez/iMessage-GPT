@@ -14,17 +14,14 @@ class MsgReceiver():
         # Open chat.db file
         self.con = sqlite3.connect(env['CHAT_DB'])
         self.cur = self.con.cursor()
-        
-        with open (f"{dir_path}/../chat/contacts.json", "r") as contactsfile:
-            self.contacts = json.load(contactsfile)
 
-        with open (f"{dir_path}/../chat/chatIds.json", "r") as idsfile:
-            self.chatIds = json.load(idsfile)['chatIds']
+        with open(f"{dir_path}/../chat/config.json", "r") as configfile:
+            config = json.load(configfile)
+            self.contacts = config['contacts']
+            self.chatIds = config['chatIds']
 
-        # dict that holds queues that hold the 10 most recent messages from newest to oldest
-        self.recent_messages = {}
-        for id in self.chatIds:
-            self.recent_messages[id] = []
+        # dict that holds rowid for most recent message for each chatId
+        self.most_recent_messages = {}
         self.new_messages = {}
         self.read()
         self.new_messages = {}
@@ -35,21 +32,27 @@ class MsgReceiver():
         # query for messages (id, messageContent, phone#_of_sender, chatId)
         for chatId in self.chatIds:
             res = self.cur.execute(f"""
-                                SELECT m.rowid, m.attributedBody,
-                                        CASE WHEN m.is_from_me THEN '{env['MY_NUMBER']}' ELSE h.id END as fromNumber,
-                                        COALESCE(cache_roomnames, h.id) as chatId
-                                FROM message AS m
-                                                LEFT JOIN handle AS h ON m.handle_id=h.rowid
-                                WHERE chatId='{chatId}'
-                                ORDER BY m.date desc
-                                LIMIT 10
+                SELECT m.rowid, m.attributedBody,
+                        CASE WHEN m.is_from_me THEN 'ME' ELSE h.id END as fromNumber,
+                        COALESCE(cache_roomnames, h.id) as chatId
+                FROM message AS m
+                        LEFT JOIN handle AS h ON m.handle_id=h.rowid
+                WHERE chatId='{chatId}'
+                        AND m.rowid>{self.most_recent_messages.get(chatId, -1)}
+                ORDER BY m.date desc
+                LIMIT 10
             """)
             rowsForThisId = res.fetchall()
+            if len(rowsForThisId) == 0:
+                continue
+
             rowsForThisId.reverse()
             
             messages = []
+            rowIds = []
             # 'attributedBody' column has message content, but it's encoded so we have to clean it up
             for (ROWID, attributedBody, sender, cid) in rowsForThisId:
+                rowIds.append(ROWID)
                 if attributedBody:
                       filename = f'{dir_path}/../bin/{ROWID}.bin'
                       with open(filename, 'wb') as binfile:
@@ -65,12 +68,11 @@ class MsgReceiver():
                           output = result.stdout.decode()
                           # clean up typedstream output
                           msg_text = output.split('(')[1].split(')\n')[0]
-                          contact = self.contacts[sender] if sender in self.contacts.keys() else sender
+                          contact = self.contacts.get(sender, sender)
                           msg = f"{contact}: {msg_text}"
-                          if msg not in self.recent_messages[chatId]:
-                              messages.insert(0, msg)
+                          messages.insert(0, msg)
             self.new_messages[chatId] = messages
-            self.recent_messages[chatId] = (self.new_messages[chatId] + self.recent_messages[chatId])[:10]
+            self.most_recent_messages[chatId] = max(rowIds)
     
     def get_new_messages(self):
         ret = self.new_messages
@@ -82,13 +84,18 @@ class MsgReceiver():
     
 
 if __name__ == '__main__':
+    import time
     receiver = MsgReceiver()
-    receiver.read()
-    for id in receiver.chatIds:
-        print(receiver.recent_messages[id])
+    while True:
+        while not receiver.has_new_messages():
+            time.sleep(5)
+            receiver.read()
+        print('new messages')
+        new_messages = receiver.get_new_messages()
+        print(new_messages)
 
                     
 
-              
+
 
 

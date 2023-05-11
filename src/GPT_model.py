@@ -8,12 +8,13 @@ env = dotenv_values(f'{dir_path}/../.env')
 
 class GPT_model():
     def __init__(self):
-        with open (f"{dir_path}/../chat/models.json", "r") as modelfile:
-            self.models = json.load(modelfile)
+        with open(f"{dir_path}/../chat/config.json", "r") as configfile:
+            config = json.load(configfile)
+            self.chatIds = config['chatIds']
+            self.models = config['models']
+
         with open (f"{dir_path}/../chat/chat.json", "r") as chatfile:
             self.chatHistory = json.load(chatfile)
-        with open(f"{dir_path}/../chat/chatIds.json", "r") as idfile:
-            self.chatIds = json.load(idfile)['chatIds']
         
         if self.chatHistory.keys() != self.chatIds:
             self.clear_history()
