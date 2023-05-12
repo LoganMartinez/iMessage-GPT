@@ -56,4 +56,5 @@ This project allows you to add multiple customizable AI chatbots into iMessage c
 * Add helpful error messages for improper setup (config file setup wrong, no access to chat.db file, etc)
 * Add some way to easily get groupchat ID's so you don't have to look in the chat.db file yourself
 * Use Contacts app to get names of contacts rather than having to manually put it in the config.json file
+* Error handling for reaching the token limit
 
