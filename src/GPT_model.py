@@ -83,27 +83,47 @@ class GPT_model():
                     "n": 1,
                     "size": "256x256",
                 }
+                if 'reference_image' in self.models[modelName].keys():
+                    url = 'https://api.openai.com/v1/images/edits'
+                    files = {"image": open(self.models[modelName]['reference_image'], 'rb')}
+                    j = None
+                    data = req_body
+                else:
+                    url = 'https://api.openai.com/v1/images/generations'
+                    files = None
+                    j = req_body
+                    data = None
+                
                 try:
-                    r = requests.post('https://api.openai.com/v1/images/generations',
-                                    headers={ "Authorization": f"Bearer {env['API_KEY']}", },
-                                    json=req_body
+                    r = requests.post(url,
+                                    headers={ "Authorization": f"Bearer {env['API_KEY']}"},
+                                    data=data,
+                                    files=files,
+                                    json=j
                                     )
                 except Exception as e:
                     print(f'Error sending request to OpenAI api: {e}')
                     return []
                 
+                if files:
+                    files['image'].close()
+                if r.status_code >= 500:
+                    print(f'problem with openai server: {r.status_code}')
+                    return []
+
                 full_response = json.loads(r.text)
 
                 if 'error' in full_response.keys():
-                    error = full_response['error']
-                    if 'overloaded' in error['message']:
-                        responses.append('GPT model is overloaded with requests, try again later.')
-                    else:
-                        print('error with sending request: ' + str(full_response['error']))
-                        return []
+                    print(f'error with request: {full_response["error"]}')
+                    responses.append(full_response['error']['message'])
                 else:
+                    id = full_response['created']
                     imageUrl = full_response['data'][0]['url']
-                    responses.append(imageUrl)
+                    img_data = requests.get(imageUrl).content
+                    imagePath = f'{env["PICTURES_FOLDER"]}/gpt/{id}.png'
+                    with open(imagePath, 'wb') as handler:
+                        handler.write(img_data)
+                    responses.append(f'imagePath:{imagePath}')
 
         with open (f"{dir_path}/../chat/chat.json", "w") as chatfile: 
             json.dump(self.chatHistory, chatfile)
