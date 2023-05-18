@@ -11,7 +11,6 @@ env = dotenv_values(f'{dir_path}/../.env')
 class MsgReceiver():
     
     def __init__(self):
-        # Open chat.db file
         self.con = sqlite3.connect(env['CHAT_DB'])
         self.cur = self.con.cursor()
 
