@@ -14,6 +14,8 @@ chatdb_path = env['CHAT_DB']
 picFolder = f'{env["PICTURES_FOLDER"]}/gpt'
 if not os.path.exists(picFolder):
     os.makedirs(picFolder)
+if not os.path.exists(f'{picFolder}/templates'):
+    os.makedirs(f'{picFolder}/templates')
 validate_config()
 
 receiver = MsgReceiver()

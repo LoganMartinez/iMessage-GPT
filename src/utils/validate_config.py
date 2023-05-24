@@ -22,8 +22,13 @@ schema = {
             "additionalProperties": {
                 "type": "object",
                 "properties": {
-                   "text_prompt": { "type": "string" },
-                   "include_image": { "type": "boolean" }  
+                  "text_prompt": { "type": "string" },
+                  "include_image": { "type": "boolean" },
+                  "reference_size": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 1
+                  }
                 }
             }
         }

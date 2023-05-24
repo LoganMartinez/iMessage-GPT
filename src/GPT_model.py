@@ -2,6 +2,8 @@ from dotenv import dotenv_values
 import os
 import json
 from utils.api_requests import *
+from utils import image_editing
+import random
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 env = dotenv_values(f'{dir_path}/../.env')
@@ -61,9 +63,9 @@ class GPT_model():
                     
             # generate image response
             if 'include_image' in self.models[modelName].keys():
-                # will use the generated text response as a prompt if text generation is enabled
                 if ':' in message:
                     message = message.split(':')[1]
+                # will use the generated text response as a prompt if text generation is enabled
                 prompt = response.get('content', message)
                 if len(prompt) >= 400:
                     # prompt needs to be truncated
@@ -81,8 +83,19 @@ class GPT_model():
                     print(f'generated text was truncated for image generation: {prompt}')
 
                 if 'reference_image' in self.models[modelName].keys():
-                    referenceUrl = self.models[modelName]['reference_image']
-                    (success, response) = dalle_request(prompt, referenceImage=referenceUrl)
+                    referencePath = self.models[modelName]['reference_image']
+                    if os.path.isdir(referencePath):
+                        references = os.listdir(referencePath)
+                        randomRef = references[random.randint(0, len(references)-1)]
+                        print(f'using reference image: {randomRef}')
+                        referencePath = f'{referencePath}/{randomRef}'
+                    refSize = self.models[modelName].get('reference_size')
+                    if refSize:
+                        templatePath = image_editing.generateTemplate(referencePath, objectSize=refSize)
+                    else:
+                        templatePath = image_editing.generateTemplate(referencePath)
+                    (success, response) = dalle_request(prompt, referenceImage=templatePath)
+                    os.remove(templatePath)
                 else:
                     (success, response) = dalle_request(prompt)
 
@@ -91,7 +104,12 @@ class GPT_model():
                     continue
                 id = response['created']
                 imageUrl = response['data'][0]['url']
-                img_data = requests.get(imageUrl).content
+                try:
+                    img_data = requests.get(imageUrl).content
+                except Exception as e:
+                    print(f'Error sending request to imageUrl: {e}')
+                    responses.append(f'image url could not be reached, but it might be available at {imageUrl}')
+                    continue
                 imagePath = f'{env["PICTURES_FOLDER"]}/gpt/{id}.png'
                 with open(imagePath, 'wb') as handler:
                     handler.write(img_data)

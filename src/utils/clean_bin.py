@@ -14,4 +14,6 @@ def clean_bin():
 def clean_pictures():
     pictures = os.listdir(f'{env["PICTURES_FOLDER"]}/gpt')
     for file in pictures:
-        os.remove(f'{env["PICTURES_FOLDER"]}/gpt/{file}')
+        path = f'{env["PICTURES_FOLDER"]}/gpt/{file}'
+        if os.path.isfile(path):
+            os.remove(path)
